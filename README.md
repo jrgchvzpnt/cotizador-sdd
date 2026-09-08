@@ -74,6 +74,9 @@ La aplicación completa (interfaz + API) queda disponible en `http://localhost:8
 (o el puerto que indique la variable de entorno `PORT`). Sube y ejecuta ese único JAR
 en cualquier servidor con Java 25 instalado.
 
+Para ver opciones concretas de dónde publicarlo (gratis y de paga, con los pasos de
+cada una), ver [docs/hosting.md](docs/hosting.md).
+
 ## Configuración
 
 Todo se configura por variables de entorno (nunca hay credenciales en el código):
