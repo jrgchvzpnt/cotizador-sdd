@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File \"E:\\\\Projects\\\\ssd-projects\\\\tema1\\\\fecha2\\\\cotizador-sdd\\\\.specify\\\\scripts\\\\powershell\\\\setup-tasks.ps1\" -Json)",
+      "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File \"E:\\\\Projects\\\\ssd-projects\\\\tema1\\\\fecha2\\\\cotizador-sdd\\\\.specify\\\\scripts\\\\powershell\\\\check-prerequisites.ps1\" -Json -RequireSpec -RequireTasks -IncludeTasks)",
+      "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File \"E:\\\\Projects\\\\ssd-projects\\\\tema1\\\\fecha2\\\\cotizador-sdd\\\\.specify\\\\scripts\\\\powershell\\\\check-prerequisites.ps1\" -Json -RequireTasks -IncludeTasks)",
+      "Bash(node --test tests/unit)",
+      "Bash(node --test ./tests/unit)",
+      "Bash(node -e \"console.log\\(new Date\\('2027-01-01'\\).toString\\(\\)\\); console.log\\(new Date\\('2027-01-01'\\).getFullYear\\(\\)\\); console.log\\(Intl.DateTimeFormat\\(\\).resolvedOptions\\(\\).timeZone\\)\")",
+      "Bash(node --test)",
+      "Bash(npm test *)",
+      "Bash(node --check src/app.js)",
+      "Bash(node --check src/storage/store.js)",
+      "Bash(node --check src/models/calculos.js)",
+      "Bash(node --check src/models/numeracion.js)",
+      "Bash(node --check src/models/clientes.js)",
+      "Bash(node --check src/models/cotizaciones.js)",
+      "Bash(node --check src/pdf/generarPdf.js)",
+      "Bash(node --check src/views/cotizacion.js)",
+      "Bash(node --check src/views/listaCotizaciones.js)",
+      "Bash(node --input-type=module -e ' *)",
+      "Bash(node --check src/models/servicios.js)",
+      "Bash(node --check src/views/catalogo.js)",
+      "Bash(npm ls *)",
+      "Bash(node -e \"require.resolve\\('playwright'\\)\")",
+      "Bash(npx --yes playwright --version)"
+    ]
+  }
+}
