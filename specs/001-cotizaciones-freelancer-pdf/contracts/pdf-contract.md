@@ -3,7 +3,10 @@
 El PDF descargable es el principal entregable visible para el cliente del freelancer, así
 que su contenido es un "contrato" que la generación del documento debe cumplir siempre
 (FR-010). Cualquier persona no técnica debe poder verificarlo abriendo el PDF y
-comparándolo contra esta lista (Principio IV).
+comparándolo contra esta lista (Principio IV). A partir de la migración a Angular +
+Spring Boot, el PDF se genera en el backend (endpoint `GET /api/cotizaciones/{id}/pdf`,
+ver `api-rest.md`) usando OpenPDF; el contenido exigido no cambia por el hecho de
+generarse en el servidor en vez del navegador.
 
 ## Contenido obligatorio
 

@@ -31,6 +31,10 @@ redactar esta especificación se resolvieron las siguientes preguntas con el usu
 - Q: ¿Qué datos de contacto exactos se piden del freelancer y del cliente para mostrarlos en el PDF? → A: Correo electrónico y teléfono.
 - Q: Para poder crear varias cotizaciones y volver a una ya empezada (necesario para SC-003 y para el flujo normal de trabajo), ¿debe existir una pantalla que liste las cotizaciones guardadas? → A: Sí; se agrega como requisito explícito (FR-013) detectado durante `/speckit-analyze`, antes de implementarlo.
 
+### Session 2026-09-07
+
+- Q: La constitución se enmendó (v2.0.0) para adoptar Angular (frontend) y Java con Spring Boot (backend) como arquitectura estándar del proyecto. Esta spec asumía "sin base de datos en la nube" y "persistencia local en el dispositivo" (Fuera de Alcance / Assumptions), lo cual queda en conflicto directo con un backend real. → A: Los datos pasan a guardarse en la base de datos del backend (Spring Boot); se mantiene sin cuentas de usuario ni inicio de sesión (un único freelancer por instalación), pero ya no se limitan a un solo dispositivo — se actualizan FR-011, Fuera de Alcance y Assumptions en consecuencia.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Crear una cotización y descargarla en PDF (Priority: P1)
@@ -179,8 +183,8 @@ nueva, con su precio por defecto precargado.
   cotización, fecha de emisión, fecha de validez, la tabla de líneas y el desglose de
   base imponible, IVA y total.
 - **FR-011**: El sistema MUST conservar el perfil del freelancer, su catálogo, su lista
-  de clientes y todas sus cotizaciones entre sesiones, sin requerir cuenta de usuario ni
-  conexión a internet.
+  de clientes y todas sus cotizaciones entre sesiones y entre dispositivos, guardándolos
+  en la base de datos del backend, sin requerir cuenta de usuario ni inicio de sesión.
 - **FR-012**: El sistema MUST bloquear la edición de las líneas y del cliente de una
   cotización una vez que se ha generado su PDF; cualquier cambio posterior requiere
   crear una cotización nueva.
@@ -227,9 +231,11 @@ nueva, con su precio por defecto precargado.
 ## Fuera de Alcance (v0)
 
 - No es un comprobante fiscal: no incluye facturación electrónica ni timbrado.
-- Sin cuentas de usuario ni inicio de sesión con contraseña.
-- Sin almacenamiento en la nube: los datos viven únicamente en el dispositivo donde se
-  usa la aplicación; cambiar de computadora no traslada las cotizaciones guardadas.
+- Sin cuentas de usuario ni inicio de sesión con contraseña: la aplicación sirve a un
+  único freelancer por instalación del backend.
+- Sin sincronización multi-usuario ni permisos: un solo freelancer usa cada instalación
+  del backend; los datos se guardan en su base de datos y son accesibles desde cualquier
+  dispositivo que apunte a esa misma instalación.
 - Sin multidivisa: únicamente pesos mexicanos (MXN).
 - Sin envío del PDF por correo desde la aplicación; el freelancer lo descarga y lo envía
   por su cuenta.
@@ -261,9 +267,10 @@ nueva, con su precio por defecto precargado.
   de bienvenida que invita a configurar el perfil antes de crear la primera cotización.
 - **Terminología**: se usa el término "cotización" en vez de "presupuesto", consistente
   con el nombre del producto (Cotizador) y el uso habitual en México.
-- **Persistencia local**: la aplicación no requiere conexión a internet para guardar o
-  consultar perfil, catálogo y cotizaciones; estos datos residen únicamente en el
-  dispositivo donde se usa la aplicación.
+- **Persistencia en el backend**: perfil, catálogo, clientes y cotizaciones se guardan
+  en la base de datos del backend (Spring Boot), no en el navegador; la aplicación
+  requiere conexión con ese backend para guardar o consultar esta información,
+  conforme a la arquitectura estándar adoptada en la constitución v2.0.0.
 - **Gestión de clientes**: los clientes se guardan automáticamente al capturarlos por
   primera vez en una cotización y quedan disponibles para elegirse en cotizaciones
   futuras; esta v0 no incluye una pantalla separada para editar o eliminar clientes ya
