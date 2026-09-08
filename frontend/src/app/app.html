@@ -1,0 +1,26 @@
+<mat-toolbar color="primary" class="!flex !justify-center">
+  <div class="flex w-full max-w-3xl items-center gap-2">
+    <mat-icon>request_quote</mat-icon>
+    <span class="text-lg font-medium">Cotizador</span>
+  </div>
+</mat-toolbar>
+
+<nav mat-tab-nav-bar [tabPanel]="panel" matTabNavBarStretchTabs="false" class="!flex !justify-center bg-white shadow-sm">
+  <div class="flex w-full max-w-3xl">
+    <a mat-tab-link routerLink="/cotizaciones" routerLinkActive #rlaCotizaciones="routerLinkActive" [active]="rlaCotizaciones.isActive">
+      Mis Cotizaciones
+    </a>
+    <a mat-tab-link routerLink="/catalogo" routerLinkActive #rlaCatalogo="routerLinkActive" [active]="rlaCatalogo.isActive">
+      Catálogo
+    </a>
+    <a mat-tab-link routerLink="/perfil" routerLinkActive #rlaPerfil="routerLinkActive" [active]="rlaPerfil.isActive">
+      Mi Perfil
+    </a>
+  </div>
+</nav>
+
+<mat-tab-nav-panel #panel>
+  <main class="mx-auto flex max-w-3xl flex-col gap-4 p-4">
+    <router-outlet />
+  </main>
+</mat-tab-nav-panel>

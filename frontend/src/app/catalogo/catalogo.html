@@ -1,0 +1,51 @@
+<mat-card>
+  <mat-card-content class="flex flex-col gap-1 py-2">
+    <h2 class="text-xl font-medium">{{ editandoId() ? 'Editar servicio' : 'Nuevo servicio' }}</h2>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Nombre del servicio</mat-label>
+      <input matInput placeholder="Ej. Diseño de logotipo" [(ngModel)]="nombre" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Precio por defecto (MXN)</mat-label>
+      <input matInput type="number" min="0" step="0.01" placeholder="0.00" [(ngModel)]="precioDefault" />
+    </mat-form-field>
+
+    <div class="flex gap-2">
+      <button mat-flat-button color="primary" (click)="guardar()">
+        {{ editandoId() ? 'Guardar cambios' : 'Agregar servicio' }}
+      </button>
+      @if (editandoId()) {
+        <button mat-stroked-button (click)="cancelar()">Cancelar</button>
+      }
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<mat-card>
+  <mat-card-content class="py-2">
+    <h2 class="mb-2 text-xl font-medium">Servicios guardados</h2>
+    @if (servicios().length === 0) {
+      <p class="text-gray-600">Todavía no has agregado ningún servicio.</p>
+    } @else {
+      <mat-list>
+        @for (servicio of servicios(); track servicio.id) {
+          <mat-list-item class="!h-auto !py-2">
+            <div class="flex w-full flex-wrap items-center justify-between gap-2">
+              <span>{{ servicio.nombre }} — {{ servicio.precioDefault | currency: 'MXN' }}</span>
+              <div class="flex gap-1">
+                <button mat-icon-button (click)="editar(servicio)" aria-label="Editar">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button (click)="eliminar(servicio.id)" aria-label="Eliminar">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </mat-list-item>
+        }
+      </mat-list>
+    }
+  </mat-card-content>
+</mat-card>
