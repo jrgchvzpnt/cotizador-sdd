@@ -1,107 +1,92 @@
-# Research & Decisiones Técnicas: Cotizaciones en PDF para Freelancers
+# Research & Decisiones Técnicas: Migración a Angular + Java/Spring Boot
 
-Este documento explica, en lenguaje de negocio, las decisiones importantes que definen
-cómo se va a construir la v1.0, por qué se tomaron y qué alternativas se descartaron.
-Ninguna de estas decisiones añade funcionalidad no pedida en la spec (Principio III);
-solo determinan la forma más simple de construir exactamente lo que la spec pide
-(Principio I).
+Este documento reemplaza al `research.md` de la versión sin backend y explica, en
+lenguaje de negocio, las decisiones de la nueva arquitectura pedida explícitamente por
+el usuario y ya reflejada en la constitución v2.0.0.
 
-## Decisión 1: Aplicación web sin servidor propio (solo lo que corre en el navegador)
+## Decisión 1: Backend en Java con Spring Boot como fuente única de la verdad
 
-**Decisión**: Construir la herramienta como una página web que funciona enteramente en el
-navegador del freelancer, sin un servidor propio detrás que procese información.
+**Decisión**: todo el cálculo (base imponible, IVA, total), la numeración automática y
+la generación del PDF se mueven al backend. El frontend en Angular deja de calcular
+nada por su cuenta; solo muestra lo que el backend responde.
 
-**Por qué**: El usuario pidió que la v1.0 se pueda "publicar online enseguida" y que no se
-agregue infraestructura que la spec no requiera. Una página que corre solo en el navegador
-se puede subir a un servicio de hosting gratuito o de bajo costo y quedar accesible por una
-dirección web en minutos, sin contratar ni mantener un servidor.
+**Por qué**: con un solo backend como responsable de las reglas de negocio, no hay
+riesgo de que el cálculo del navegador y el del servidor lleguen a resultados distintos
+con el tiempo. Es también la forma más simple de mantener una sola versión de la lógica
+(Principio I), en vez de reescribirla en TypeScript y en Java a la vez.
 
-**Alternativas consideradas**:
-- *Aplicación con servidor y base de datos propios* (por ejemplo, para centralizar la
-  información): se descarta porque la spec indica explícitamente "sin base de datos en la
-  nube" y "sin cuentas de usuario"; montar un servidor añadiría costo, tiempo de puesta en
-  marcha y mantenimiento que nadie pidió.
-- *Aplicación de escritorio instalable*: se descarta porque el usuario pidió que funcione
-  de forma responsiva en el navegador del móvil, no una instalación aparte por dispositivo.
+## Decisión 2: El PDF se genera en el servidor, no en el navegador
 
-## Decisión 2: Los datos viven en el dispositivo del freelancer, no en la nube
+**Decisión**: Angular pide el PDF a un endpoint del backend (`GET
+/api/cotizaciones/{id}/pdf`) y simplemente descarga el archivo que le regresa; ya no
+arma el documento en el navegador.
 
-**Decisión**: El perfil del freelancer, su catálogo de servicios, su lista de clientes y
-sus cotizaciones se guardan dentro del propio navegador donde se usa la aplicación.
+**Por qué**: como el backend ya calcula y guarda los totales, generarlo ahí evita
+duplicar el formato del documento en dos lenguajes distintos. Se usa una librería madura
+de Java (OpenPDF) en vez de escribir generación de PDF a mano.
 
-**Por qué**: Es exactamente lo que pide la spec ("los datos viven en el dispositivo del
-freelancer") y lo que reforzó el usuario al pedir "sin base de datos en la nube para esta
-versión". Guardar la información en el navegador es la forma más simple de cumplir esto:
-no hace falta ningún servicio externo para almacenar ni recuperar datos.
+**Alternativas consideradas**: mantener la generación en el navegador (como en la
+versión anterior) — se descarta porque obligaría a mantener dos implementaciones del
+mismo documento (una en Java para nada, ya que el dato vive en el backend, y otra en
+TypeScript), lo que contradice la simplicidad dentro del nuevo stack.
 
-**Consecuencia visible para el negocio**: si el freelancer cambia de computadora o de
-navegador, no vuelve a ver sus cotizaciones anteriores ahí — tal como ya lo advierte la
-sección "Fuera de Alcance" de la spec. No es un error, es la forma en que esta v1.0 decide
-mantenerse simple.
+## Decisión 3: Base de datos embebida (H2 en archivo) en vez de un servidor de base de datos aparte
 
-**Alternativas consideradas**:
-- *Guardar todo en un servicio en la nube compartido entre dispositivos*: se descarta
-  porque exige cuentas de usuario (para saber de quién son los datos) y un backend con
-  base de datos — ambos fuera de alcance explícito de esta versión.
+**Decisión**: el backend usa una base de datos H2 que se guarda en un archivo, no un
+servidor de base de datos independiente (como PostgreSQL o MySQL) que haya que instalar
+y mantener por separado.
 
-## Decisión 3: El PDF se genera también en el navegador, no en un servidor
+**Por qué**: la constitución ahora exige una base de datos gestionada por el backend,
+pero no dice cuál. Elegir la más simple de operar — sin instalar nada aparte, sin
+credenciales de un servidor externo que administrar — es la lectura más fiel del
+Principio I dentro del nuevo stack obligatorio. Si en el futuro el negocio necesita algo
+más robusto (por ejemplo, más de un freelancer por instalación), se puede migrar a
+PostgreSQL sin cambiar el resto de la aplicación, pero eso no se construye ahora porque
+nadie lo ha pedido (Principio III).
 
-**Decisión**: El documento PDF de la cotización se arma directamente en el navegador del
-freelancer al momento de descargarlo, usando una pieza de software ya hecha para esa tarea
-(una "librería" que se agrega a la página, sin necesidad de instalar nada aparte).
+## Decisión 4: Un solo artefacto de despliegue (el backend sirve el frontend)
 
-**Por qué**: Si el PDF se generara en un servidor, habría que mantener ese servidor
-funcionando y pagar por su operación — algo que no aporta valor adicional al freelancer y
-contradice "no agregar infraestructura que la spec no requiera". Generarlo en el navegador
-es más simple, más barato de operar y funciona igual de bien en celular que en computadora.
+**Decisión**: al compilar el proyecto, los archivos ya construidos de Angular se copian
+dentro del propio backend, de modo que al desplegar solo hay que subir y ejecutar un
+único programa Java; ese mismo programa atiende tanto la página web como la API.
 
-## Decisión 4: Diseño responsivo (una sola versión que se adapta a cualquier pantalla)
+**Por qué**: operar un solo proceso es más simple que operar dos servicios por separado
+(uno para el frontend, otro para el backend), y reduce a la mitad la cantidad de cosas
+que hay que configurar para "tenerlo en línea".
 
-**Decisión**: Se construye una única versión de la aplicación cuyo diseño se ajusta
-automáticamente al tamaño de la pantalla, priorizando que se vea y use bien en un celular.
+**Alternativas consideradas**: desplegar el frontend y el backend como dos servicios
+independientes (por ejemplo, el frontend en un hosting estático y el backend aparte) —
+válido y común en otros proyectos, pero aquí implica más piezas que coordinar sin que la
+spec pida esa separación; se prefiere la opción más simple.
 
-**Por qué**: El usuario pidió explícitamente que funcione "de manera responsiva en el
-móvil". Mantener una sola versión (en vez de una web y una app de celular aparte) es la
-opción más simple: un solo lugar donde corregir errores o agregar mejoras futuras.
+## Decisión 5: Sin cuentas de usuario, aunque ahora hay un backend real
 
-**Alternativas consideradas**:
-- *Apps nativas para iPhone/Android*: se descarta por ser mucho más trabajo (dos
-  aplicaciones adicionales, publicación en tiendas de aplicaciones) para un beneficio que
-  el navegador móvil ya cubre.
+**Decisión**: seguir sin login ni cuentas. Cada instalación del backend sirve a un solo
+freelancer.
 
-## Decisión 5: Sin herramientas de construcción complejas ("build pipeline")
+**Por qué**: tener un backend no obliga a tener login — son decisiones independientes.
+La spec nunca pidió cuentas de usuario, así que no se agregan solo porque ahora "hay
+dónde ponerlas" (Principio III: cero alcance fantasma).
 
-**Decisión**: El código de la aplicación se escribe de forma que el navegador lo pueda
-ejecutar directamente, sin pasos intermedios de compilación o empaquetado.
+**Consecuencia visible para el negocio**: a diferencia de la versión anterior (donde
+cambiar de computadora perdía el acceso a las cotizaciones guardadas), ahora los datos
+viven en el backend y son accesibles desde cualquier dispositivo que apunte a esa misma
+instalación — sin que el freelancer tenga que iniciar sesión para lograrlo.
 
-**Por qué**: Menos piezas móviles en el proceso de construcción significa menos cosas que
-puedan fallar al publicar la aplicación, y una puesta en marcha más rápida — alineado con
-"debe poder publicarse online enseguida" y con el Principio I de la constitución
-(simplicidad ante todo).
+## Decisión 6: Pruebas automáticas — se mantiene el mismo criterio, ahora en Java
 
-## Decisión 6: Pruebas automáticas solo donde el dinero puede fallar
+**Decisión**: las pruebas automáticas siguen limitándose a la lógica donde un error
+tendría consecuencias serias para el negocio: cálculo de dinero y numeración de
+cotizaciones. Se escriben con JUnit 5 en el backend (donde ahora vive esa lógica). El
+resto de la aplicación se sigue verificando manualmente contra `quickstart.md`.
 
-**Decisión**: Se escriben comprobaciones automáticas únicamente para los cálculos de
-dinero (base imponible, IVA, total, redondeo) y para la numeración automática de
-cotizaciones. El resto de la aplicación se verifica usándola directamente, siguiendo los
-criterios de aceptación de la spec.
+**Por qué**: el criterio de la constitución no cambió, solo el lenguaje donde se aplica.
 
-**Por qué**: Los cálculos de dinero y la numeración son los únicos puntos donde un error
-pequeño (un centavo mal redondeado, un número de cotización repetido) tendría consecuencias
-serias para el negocio del freelancer. Añadir pruebas automáticas para el resto de la
-aplicación sería una inversión no pedida por la spec (Principio III); en su lugar, cada
-criterio de aceptación se puede comprobar operando la aplicación (Principio IV), como se
-detalla en `quickstart.md`.
+## Resumen de lo que NO cambia
 
-## Resumen de lo que NO se construye (y por qué)
-
-Para que quede explícito y nadie lo dé por hecho más adelante:
-
-- No hay servidor propio ni base de datos en la nube.
-- No hay cuentas de usuario ni inicio de sesión.
-- No hay sincronización entre dispositivos.
-- No hay apps nativas de celular; solo el navegador.
-- No hay un sistema de compilación/empaquetado que mantener.
-
-Cualquiera de estos puntos puede proponerse como una mejora futura, pero no se construye en
-esta v1.0 porque no está en la spec (Principio III: cero alcance fantasma).
+- Los requisitos funcionales (FR-001 a FR-013) son los mismos; esta es una migración de
+  arquitectura, no una nueva funcionalidad.
+- Sigue sin haber cuentas de usuario, sin multidivisa, sin facturación electrónica y sin
+  descuentos — todo lo que la spec ya excluía sigue excluido.
+- El criterio de simplicidad sigue vigente; solo se redefinió qué cuenta como "simple"
+  dentro de la arquitectura Angular + Spring Boot que la constitución ahora exige.

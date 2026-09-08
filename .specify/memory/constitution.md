@@ -1,19 +1,24 @@
 <!--
 Sync Impact Report
-- Version change: N/A (plantilla sin ratificar) → 1.0.0
-- Ratificación inicial de la constitución del proyecto cotizador-sdd.
-- Principios añadidos:
-  1. Simplicidad ante todo
-  2. Idioma y mercado (español de México / MXN)
-  3. Cero alcance fantasma
-  4. Verificable por una persona no técnica
-  5. Datos del usuario
-- Secciones añadidas: Restricciones Adicionales, Flujo de Desarrollo y Calidad, Governance
-- Secciones eliminadas: ninguna (primera versión)
-- Plantillas dependientes: no se modifican en este comando (se leen en tiempo de
-  ejecución); revisar en el próximo /speckit-plan y /speckit-tasks que referencien
-  estos principios (simplicidad, idioma/moneda, alcance de spec, verificabilidad,
-  manejo mínimo de datos) al validar Constitution Check.
+- Version change: 1.0.0 → 2.0.0
+- Enmienda: se adopta Angular (frontend) y Java con Spring Boot (backend) como
+  arquitectura estándar del proyecto, a petición explícita del usuario.
+- Principios modificados (redefinición incompatible → MAJOR):
+  1. Simplicidad ante todo → ya no excluye frameworks/backend por defecto;
+     ahora exige simplicidad DENTRO de la arquitectura estándar adoptada
+     (Angular + Java/Spring Boot), no la ausencia total de framework/backend.
+- Secciones modificadas: Restricciones Adicionales (se agrega la arquitectura
+  estándar del proyecto y su implicación en persistencia de datos).
+- Principios sin cambio: II (Idioma y mercado), III (Cero alcance fantasma),
+  IV (Verificable por una persona no técnica), V (Datos del usuario).
+- Secciones añadidas/eliminadas: ninguna.
+- Plantillas dependientes: no se modifican en este comando. El plan y las
+  tareas de la funcionalidad `001-cotizaciones-freelancer-pdf` (ya implementada
+  sobre una arquitectura sin backend) deberán revisarse con /speckit-plan y
+  /speckit-tasks contra esta versión; su spec.md contiene supuestos ("sin
+  base de datos en la nube", "persistencia local") que quedan en conflicto con
+  la nueva arquitectura estándar y requerirán resolución explícita (spec o
+  excepción documentada) antes de replanificar.
 - TODOs diferidos: ninguno.
 -->
 
@@ -22,16 +27,22 @@ Sync Impact Report
 ## Core Principles
 
 ### I. Simplicidad ante todo
-Ante dos soluciones que cumplan el mismo requisito, se DEBE elegir siempre la más
-simple de implementar y de mantener. Esta es una versión inicial del producto:
-NO se DEBE anticipar complejidad para necesidades futuras hipotéticas (sin
-arquitecturas genéricas, sin capas de abstracción "por si acaso", sin
-configurabilidad que nadie ha pedido). Si una solución requiere justificar su
-complejidad, se prefiere la alternativa más simple aunque sea menos elegante o
-menos "escalable" en teoría.
-**Razón**: en una v1, la complejidad anticipada es el mayor riesgo de retraso y
-de errores; resolver el problema de hoy con el código más simple posible
-mantiene el producto entregable y comprensible.
+Dentro de la arquitectura estándar del proyecto (frontend en Angular, backend
+en Java con Spring Boot — ver Restricciones Adicionales), ante dos soluciones
+que cumplan el mismo requisito, se DEBE elegir siempre la más simple de
+implementar y de mantener. NO se DEBE anticipar complejidad para necesidades
+futuras hipotéticas más allá de lo que esa arquitectura estándar ya requiere
+(sin microservicios adicionales, sin capas de abstracción "por si acaso", sin
+patrones de diseño, módulos o librerías extra que nadie ha pedido, sin
+configurabilidad que nadie ha pedido). Si una solución requiere justificar
+complejidad adicional a la de la arquitectura estándar, se prefiere la
+alternativa más simple aunque sea menos elegante o menos "escalable" en
+teoría.
+**Razón**: adoptar Angular y Spring Boot como base responde a una decisión de
+producto para tener una arquitectura cliente-servidor completa; pero dentro de
+esa base, la complejidad anticipada sigue siendo el mayor riesgo de retraso y
+de errores, así que se sigue resolviendo cada problema con el código más
+simple posible dentro del stack elegido.
 
 ### II. Idioma y mercado
 Todo el producto —interfaz, mensajes, textos de ayuda, correos, PDFs generados
@@ -77,13 +88,26 @@ fuera del código evita filtraciones de seguridad.
 
 ## Restricciones Adicionales
 
-Toda funcionalidad de la aplicación hereda directamente las restricciones de
-los Principios anteriores: interfaz y documentos en español de México con
-montos en pesos mexicanos (Principio II); ausencia de credenciales o secretos
-en el repositorio de código (Principio V); y ninguna funcionalidad fuera de lo
-descrito en la spec correspondiente (Principio III). Cualquier dependencia,
-librería o servicio externo que se incorpore DEBE justificarse con la solución
-más simple disponible para el requisito en cuestión (Principio I).
+**Arquitectura estándar del proyecto**: el frontend se construye en Angular y
+el backend en Java con Spring Boot (a la fecha de esta enmienda, versiones
+Angular 22 y Java 25). Toda nueva funcionalidad DEBE construirse sobre esta
+misma arquitectura, salvo excepción justificada por escrito en el plan
+correspondiente. La persistencia de datos que antes vivía únicamente en el
+navegador del freelancer pasa a resolverse a través del backend (Spring
+Boot) con una base de datos gestionada por él; cualquier spec o plan que
+todavía asuma almacenamiento exclusivo en el dispositivo (sin backend) DEBE
+actualizarse explícitamente para reflejar este cambio antes de implementarse.
+
+Toda funcionalidad de la aplicación hereda además las restricciones de los
+Principios anteriores: interfaz y documentos en español de México con montos
+en pesos mexicanos (Principio II); ausencia de credenciales o secretos en el
+repositorio de código — las credenciales de la base de datos y cualquier
+configuración sensible del backend se manejan por variables de entorno,
+nunca embebidas (Principio V); y ninguna funcionalidad fuera de lo descrito
+en la spec correspondiente (Principio III). Cualquier dependencia, librería o
+servicio adicional a los que ya trae la arquitectura estándar (Angular /
+Spring Boot) DEBE justificarse con la solución más simple disponible para el
+requisito en cuestión (Principio I).
 
 ## Flujo de Desarrollo y Calidad
 
@@ -119,4 +143,4 @@ verificar que cumple estos cinco principios antes de aprobarse. La
 complejidad que se aparte del Principio I DEBE justificarse por escrito en el
 propio plan.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-05 | **Last Amended**: 2026-09-05
+**Version**: 2.0.0 | **Ratified**: 2026-09-05 | **Last Amended**: 2026-09-07

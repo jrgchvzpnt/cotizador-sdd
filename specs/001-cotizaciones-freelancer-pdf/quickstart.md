@@ -7,11 +7,14 @@ computadora del desarrollador como ya publicada en línea.
 ## Requisitos previos
 
 - Un navegador web moderno (de escritorio o de celular).
-- La aplicación abierta: durante desarrollo, sirviendo la carpeta del proyecto con
-  cualquier servidor de archivos estático (por ejemplo, la extensión "Live Server" o
-  `npx serve`); en producción, la URL pública donde quedó publicada (cualquier hosting
-  estático).
-- No se requiere ninguna cuenta, contraseña ni conexión a una base de datos.
+- El backend corriendo (Java 25 + Spring Boot): en desarrollo, `./mvnw spring-boot:run`
+  desde `backend/`; en producción, el JAR ejecutable ya construido. El backend sirve
+  también el frontend compilado, así que basta con abrir la URL que expone (por defecto
+  `http://localhost:8080`).
+- Si se trabaja el frontend por separado durante el desarrollo (`ng serve` en
+  `frontend/`), debe apuntar al backend local para las llamadas a la API.
+- No se requiere ninguna cuenta ni contraseña. La base de datos (H2 embebida) la crea el
+  propio backend automáticamente la primera vez que se ejecuta.
 
 ## Escenario 1 — Crear y descargar una cotización (Historia 1, P1)
 

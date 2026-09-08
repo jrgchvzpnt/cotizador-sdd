@@ -4,45 +4,80 @@ Herramienta web para que un freelancer cree cotizaciones profesionales (con su m
 y las descargue en PDF para enviárselas a sus clientes. Español de México, montos en
 pesos mexicanos (MXN).
 
-## Cómo funciona
+## Arquitectura
 
-Es una aplicación web estática: no tiene servidor propio ni base de datos en la nube.
-Todo el código (`index.html` + `src/`) corre directamente en el navegador, y los datos
-del freelancer (perfil, catálogo, clientes, cotizaciones) se guardan únicamente en el
-propio navegador (`localStorage`) del dispositivo donde se usa.
+- **Frontend**: Angular 22 (`frontend/`).
+- **Backend**: Java 25 + Spring Boot (`backend/`), con una base de datos H2 embebida en
+  archivo (sin servidor de base de datos aparte) y generación de PDF con OpenPDF.
+- Sin cuentas de usuario ni inicio de sesión: cada instalación del backend sirve a un
+  solo freelancer.
+- Un solo artefacto de despliegue: el backend sirve también el frontend ya compilado
+  (ver "Publicar" más abajo).
 
-## Probarla en tu computadora
+Ver `specs/001-cotizaciones-freelancer-pdf/` para la especificación, el plan y las
+decisiones de arquitectura completas.
 
-No requiere instalar dependencias ni compilar nada. Sirve la carpeta del proyecto con
-cualquier servidor de archivos estático, por ejemplo:
+## Requisitos
+
+- **Java 25** (JDK). Verifica con `java -version`.
+- **Node.js 24.15+ o 22.22.3+ o 26+** (requerido por Angular CLI 22). Verifica con
+  `node --version`; si tu Node es más viejo, instala una versión más reciente desde
+  https://nodejs.org/.
+- Maven no es necesario instalarlo aparte: el proyecto incluye `backend/mvnw`.
+
+## Desarrollo
+
+Backend (puerto 8080):
 
 ```bash
-npx serve .
-# o
-python -m http.server 8080
+cd backend
+./mvnw spring-boot:run
 ```
 
-Y abre la URL que te indique en el navegador.
+Frontend, en otra terminal (puerto 4200, con proxy hacia el backend en `/api`):
 
-## Publicarla en línea
+```bash
+cd frontend
+npm install
+npm start
+```
 
-Como no tiene backend, publicarla es simplemente subir los archivos tal cual (sin ningún
-paso de compilación) a un servicio de hosting estático. Por ejemplo, con cualquiera de
-estos servicios (gratuitos para este tipo de proyecto):
-
-- **Netlify / Vercel**: arrastra la carpeta del proyecto (o conéctala a un repositorio) y
-  despliega; no hace falta configurar ningún "build command".
-- **GitHub Pages**: sube el contenido a un repositorio de GitHub y activa Pages apuntando
-  a la raíz del repositorio.
-
-En los tres casos, basta con que `index.html` quede en la raíz del sitio publicado.
+Abre `http://localhost:4200`.
 
 ## Pruebas automáticas
 
-Solo se prueban automáticamente los cálculos de dinero y la numeración de cotizaciones
-(los puntos donde un error tendría consecuencias serias). El resto de la aplicación se
-valida usándola directamente, siguiendo `specs/001-cotizaciones-freelancer-pdf/quickstart.md`.
+Solo se prueban automáticamente los cálculos de dinero y la numeración de
+cotizaciones (los puntos donde un error tendría consecuencias serias). El resto de la
+aplicación se valida usándola directamente, siguiendo
+`specs/001-cotizaciones-freelancer-pdf/quickstart.md`.
 
 ```bash
-npm test
+cd backend
+./mvnw test
 ```
+
+## Publicar (un solo artefacto)
+
+```bash
+node build.js
+```
+
+Esto compila el frontend, copia el resultado dentro de
+`backend/src/main/resources/static/` y empaqueta el backend en un único JAR ejecutable
+en `backend/target/*.jar`. Para correrlo:
+
+```bash
+java -jar backend/target/backend-0.0.1-SNAPSHOT.jar
+```
+
+La aplicación completa (interfaz + API) queda disponible en `http://localhost:8080`
+(o el puerto que indique la variable de entorno `PORT`). Sube y ejecuta ese único JAR
+en cualquier servidor con Java 25 instalado.
+
+## Configuración
+
+Todo se configura por variables de entorno (nunca hay credenciales en el código):
+
+- `PORT`: puerto del servidor (por defecto 8080).
+- `COTIZADOR_DB_USER` / `COTIZADOR_DB_PASSWORD`: credenciales de la base de datos H2
+  (por defecto usuario `sa` sin contraseña, adecuado para un solo freelancer local).

@@ -1,0 +1,38 @@
+<mat-card>
+  <mat-card-content class="flex flex-wrap items-center justify-between gap-3 py-2">
+    <h2 class="text-xl font-medium">Mis Cotizaciones</h2>
+    <a mat-flat-button color="primary" routerLink="/cotizaciones/nueva">
+      <mat-icon>add</mat-icon>
+      Nueva cotización
+    </a>
+  </mat-card-content>
+</mat-card>
+
+<mat-card>
+  @if (cotizaciones().length === 0) {
+    <mat-card-content class="py-2 text-gray-600">
+      Todavía no has creado ninguna cotización. Crea la primera con el botón de arriba.
+    </mat-card-content>
+  } @else {
+    <mat-list>
+      @for (c of cotizaciones(); track c.id) {
+        <a mat-list-item [routerLink]="['/cotizaciones', c.id]" class="!h-auto !py-3">
+          <div class="flex w-full flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-medium">{{ c.numero }}</span>
+              <span class="text-gray-600">{{ c.clienteNombre }}</span>
+              <span class="font-medium">{{ c.total | currency: 'MXN' }}</span>
+              <mat-chip [ngClass]="c.pdfGenerado ? '!bg-green-100 !text-green-800' : '!bg-amber-100 !text-amber-800'">
+                {{ c.pdfGenerado ? 'Generada' : 'Borrador' }}
+              </mat-chip>
+            </div>
+            <span class="flex items-center gap-1 text-sm text-blue-600">
+              {{ c.pdfGenerado ? 'Ver' : 'Continuar editando' }}
+              <mat-icon class="!text-base">chevron_right</mat-icon>
+            </span>
+          </div>
+        </a>
+      }
+    </mat-list>
+  }
+</mat-card>

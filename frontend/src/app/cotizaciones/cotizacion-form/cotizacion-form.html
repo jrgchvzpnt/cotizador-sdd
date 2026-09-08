@@ -1,0 +1,214 @@
+@if (!cotizacion()) {
+  <mat-card>
+    <mat-card-content class="flex flex-col gap-1 py-2">
+      <h2 class="text-xl font-medium">Nueva cotización — elige un cliente</h2>
+
+      @if (clientes().length > 0) {
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Cliente guardado</mat-label>
+          <mat-select [(ngModel)]="clienteSeleccionadoId">
+            @for (cliente of clientes(); track cliente.id) {
+              <mat-option [value]="cliente.id">{{ cliente.nombre }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <div>
+          <button mat-flat-button color="primary" (click)="continuarConCliente()">Continuar con este cliente</button>
+        </div>
+        <mat-divider class="!my-4" />
+      }
+
+      <h3 class="text-base font-medium text-gray-700">O da de alta un cliente nuevo</h3>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Nombre</mat-label>
+        <input matInput placeholder="Nombre del cliente" [(ngModel)]="nuevoClienteNombre" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Correo electrónico</mat-label>
+        <input matInput type="email" placeholder="correo@ejemplo.com" [(ngModel)]="nuevoClienteCorreo" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Teléfono</mat-label>
+        <input matInput type="tel" placeholder="55 1234 5678" [(ngModel)]="nuevoClienteTelefono" />
+      </mat-form-field>
+      <div>
+        <button mat-flat-button color="primary" (click)="crearClienteYContinuar()">Crear cliente y continuar</button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+} @else {
+  @let c = cotizacion()!;
+
+  <mat-card>
+    <mat-card-content class="flex flex-col gap-2 py-2">
+      <div class="flex flex-wrap items-center gap-2">
+        <h2 class="text-xl font-medium">Cotización {{ c.numero }}</h2>
+        <mat-chip [ngClass]="c.pdfGenerado ? '!bg-green-100 !text-green-800' : '!bg-amber-100 !text-amber-800'">
+          {{ c.pdfGenerado ? 'Generada' : 'Borrador' }}
+        </mat-chip>
+      </div>
+      <p class="text-gray-600">Cliente: {{ c.cliente.nombre }}</p>
+      <p class="text-gray-600">
+        Emisión: {{ c.fechaEmision | date: "dd 'de' MMMM 'de' y" }} · Válida hasta:
+        {{ c.fechaValidez | date: "dd 'de' MMMM 'de' y" }}
+      </p>
+
+      @if (c.pdfGenerado) {
+        <div class="flex items-center gap-2 rounded bg-blue-50 p-3 text-blue-800">
+          <mat-icon>lock</mat-icon>
+          Esta cotización ya fue generada y está bloqueada. Crea una cotización nueva para reflejar cualquier cambio.
+        </div>
+      } @else if (clientes().length > 1) {
+        <mat-form-field appearance="outline" class="max-w-xs">
+          <mat-label>Cambiar cliente</mat-label>
+          <mat-select [value]="c.cliente.id" (selectionChange)="cambiarCliente($event.value)">
+            @for (cliente of clientes(); track cliente.id) {
+              <mat-option [value]="cliente.id">{{ cliente.nombre }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  @if (!c.pdfGenerado) {
+    @if (servicios().length > 0) {
+      <mat-card>
+        <mat-card-content class="flex flex-wrap items-end gap-2 py-2">
+          <mat-form-field appearance="outline" class="min-w-[240px] flex-1">
+            <mat-label>Agregar desde catálogo</mat-label>
+            <mat-select [(ngModel)]="servicioSeleccionadoId">
+              @for (servicio of servicios(); track servicio.id) {
+                <mat-option [value]="servicio.id">{{ servicio.nombre }} — {{ servicio.precioDefault | currency: 'MXN' }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <button mat-stroked-button color="primary" (click)="agregarDesdeCatalogo()">
+            <mat-icon>playlist_add</mat-icon>
+            Agregar
+          </button>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <mat-card>
+      <mat-card-content class="flex flex-wrap items-end gap-2 py-2">
+        <mat-form-field appearance="outline" class="min-w-[200px] flex-[2]">
+          <mat-label>Descripción del trabajo</mat-label>
+          <input matInput [(ngModel)]="lineaDescripcion" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-24">
+          <mat-label>Cantidad</mat-label>
+          <input matInput type="number" min="0.01" step="0.01" [(ngModel)]="lineaCantidad" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-36">
+          <mat-label>Precio (MXN)</mat-label>
+          <input matInput type="number" min="0" step="0.01" placeholder="0.00" [(ngModel)]="lineaPrecio" />
+        </mat-form-field>
+        <button mat-flat-button color="primary" (click)="agregarLinea()">
+          <mat-icon>add</mat-icon>
+          Agregar línea
+        </button>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <mat-card>
+    @if (c.lineas.length === 0) {
+      <mat-card-content class="py-2 text-gray-600">Todavía no hay líneas en esta cotización.</mat-card-content>
+    } @else {
+      <div class="overflow-x-auto">
+        <table mat-table [dataSource]="c.lineas" class="w-full">
+          <ng-container matColumnDef="descripcion">
+            <th mat-header-cell *matHeaderCellDef>Descripción</th>
+            <td mat-cell *matCellDef="let linea">
+              @if (!c.pdfGenerado && lineaEditandoId() === linea.id) {
+                <mat-form-field appearance="outline" class="w-full !text-sm">
+                  <input matInput [(ngModel)]="edicionDescripcion" />
+                </mat-form-field>
+              } @else {
+                {{ linea.descripcion }}
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="cantidad">
+            <th mat-header-cell *matHeaderCellDef>Cant.</th>
+            <td mat-cell *matCellDef="let linea">
+              @if (!c.pdfGenerado && lineaEditandoId() === linea.id) {
+                <mat-form-field appearance="outline" class="w-20 !text-sm">
+                  <input matInput type="number" min="0.01" step="0.01" [(ngModel)]="edicionCantidad" />
+                </mat-form-field>
+              } @else {
+                {{ linea.cantidad }}
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="precioUnitario">
+            <th mat-header-cell *matHeaderCellDef>Precio unit.</th>
+            <td mat-cell *matCellDef="let linea">
+              @if (!c.pdfGenerado && lineaEditandoId() === linea.id) {
+                <mat-form-field appearance="outline" class="w-28 !text-sm">
+                  <input matInput type="number" min="0" step="0.01" [(ngModel)]="edicionPrecio" />
+                </mat-form-field>
+              } @else {
+                {{ linea.precioUnitario | currency: 'MXN' }}
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="importe">
+            <th mat-header-cell *matHeaderCellDef>Importe</th>
+            <td mat-cell *matCellDef="let linea">
+              {{ importe(linea.cantidad, linea.precioUnitario) | currency: 'MXN' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let linea">
+              @if (!c.pdfGenerado) {
+                @if (lineaEditandoId() === linea.id) {
+                  <button mat-icon-button color="primary" (click)="guardarEdicion(linea.id!)" aria-label="Guardar">
+                    <mat-icon>check</mat-icon>
+                  </button>
+                  <button mat-icon-button (click)="cancelarEdicion()" aria-label="Cancelar">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                } @else {
+                  <button mat-icon-button (click)="iniciarEdicion(linea.id!)" aria-label="Editar">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button (click)="eliminarLinea(linea.id!)" aria-label="Eliminar">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                }
+              }
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+          <tr mat-row *matRowDef="let row; columns: columnas"></tr>
+        </table>
+      </div>
+
+      <mat-card-content class="flex flex-col items-end gap-1 py-3">
+        <p class="text-gray-600">Base imponible: {{ c.baseImponible | currency: 'MXN' }}</p>
+        <p class="text-gray-600">IVA (16%): {{ c.iva | currency: 'MXN' }}</p>
+        <p class="text-lg font-semibold">Total a pagar: {{ c.total | currency: 'MXN' }}</p>
+      </mat-card-content>
+    }
+  </mat-card>
+
+  <div class="flex flex-wrap items-center gap-2">
+    <button mat-flat-button color="primary" [disabled]="c.lineas.length === 0" (click)="descargarPdf()">
+      <mat-icon>picture_as_pdf</mat-icon>
+      {{ c.pdfGenerado ? 'Descargar PDF de nuevo' : 'Descargar PDF' }}
+    </button>
+    @if (c.lineas.length === 0) {
+      <span class="text-sm text-red-600">Agrega al menos una línea para poder descargar el PDF.</span>
+    }
+    <button mat-stroked-button (click)="crearOtraCotizacion()">Crear otra cotización</button>
+  </div>
+}

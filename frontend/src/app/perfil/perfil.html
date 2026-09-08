@@ -1,0 +1,39 @@
+<mat-card>
+  <mat-card-content class="flex flex-col gap-1 py-2">
+    <h2 class="text-xl font-medium">Mi Perfil</h2>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Nombre</mat-label>
+      <input matInput [(ngModel)]="nombre" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Correo electrónico</mat-label>
+      <input matInput type="email" [(ngModel)]="correoElectronico" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Teléfono</mat-label>
+      <input matInput type="tel" [(ngModel)]="telefono" />
+    </mat-form-field>
+
+    @if (logo()) {
+      <div class="mb-2 flex items-center gap-3">
+        <img [src]="logo()" alt="Logo actual" class="h-20 w-20 rounded object-contain ring-1 ring-gray-200" />
+        <button mat-stroked-button (click)="quitarLogo()">Quitar logo</button>
+      </div>
+    }
+
+    <div class="mb-2">
+      <button mat-stroked-button (click)="inputArchivo.click()">
+        <mat-icon>upload</mat-icon>
+        {{ logo() ? 'Cambiar logo' : 'Subir logo (opcional)' }}
+      </button>
+      <input #inputArchivo type="file" accept="image/png,image/jpeg" class="hidden" (change)="onArchivoSeleccionado($event)" />
+    </div>
+
+    <div>
+      <button mat-flat-button color="primary" (click)="guardar()">Guardar perfil</button>
+    </div>
+  </mat-card-content>
+</mat-card>
